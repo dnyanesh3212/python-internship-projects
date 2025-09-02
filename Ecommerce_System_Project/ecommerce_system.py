@@ -63,8 +63,14 @@ def load_customers():
             for row in reader:
                 customers[row["username"]] = {
                     "name": row["name"],
-                    "role": row.get("role", "customer"),  # role defaults to customer
+                    "role": row.get("role", "customer"),
                 }
+
+    # ✅ Ensure default admin always exists
+    if "admin" not in customers:
+        customers["admin"] = {"name": "System Admin", "role": "admin"}
+        save_customers(customers)
+
     return customers
 
 def save_customers(customers):
@@ -110,7 +116,7 @@ def register_customer(customers):
         print("❌ Username already exists!")
         return None
     name = input("Enter your full name: ").strip()
-    role = "admin" if username.lower() == "admin" else "customer"
+    role = "customer"
     customers[username] = {"name": name, "role": role}
     save_customers(customers)
     print(f"✅ Customer {name} registered successfully as {role}.")
@@ -236,7 +242,8 @@ def main():
             role = customers[username]["role"]
             print(f"\nLogged in as: {username} ({role})")
             print("3. Show Products")
-            print("4. Purchase Product")
+            if role == "customer":
+                print("4. Purchase Product")
             if role == "admin":
                 print("5. Show Sales Report")
                 print("6. Restock Products")
@@ -249,7 +256,7 @@ def main():
             username = login_customer(customers)
         elif choice == "3" and username:
             display_products(products)
-        elif choice == "4" and username:
+        elif choice == "4" and username and customers[username]["role"] == "customer":
             purchase_product(products, username, sales)
         elif choice == "5" and username and customers[username]["role"] == "admin":
             show_sales_report(sales)
